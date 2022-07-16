@@ -119,10 +119,12 @@ ifneq ($(KBUILD_OUTPUT),)
 # Invoke a second make in the output directory, passing relevant variables
 # check that the output directory actually exists
 saved-output := $(KBUILD_OUTPUT)
-KBUILD_OUTPUT := $(shell cd $(KBUILD_OUTPUT) && /bin/pwd)
+KBUILD_OUTPUT := $(shell mkdir -p ${KBUILD_OUTPUT} && cd $(KBUILD_OUTPUT) && /bin/pwd)
 $(if $(KBUILD_OUTPUT),, \
-     $(error output directory "$(saved-output)" does not exist))
+     $(error failed to create output directory "$(saved-output)" ))
 
+KBUILD_OUTPUT_XBOARD:=$(shell mkdir -p $(KBUILD_OUTPUT)/drivers/char &&cp -rf $(CURDIR)/drivers/char/virtd $(KBUILD_OUTPUT)/drivers/char/ &&mkdir -p $(KBUILD_OUTPUT)/drivers/gpu/arm && cp -rf $(CURDIR)/drivers/gpu/arm/mali400 $(KBUILD_OUTPUT)/drivers/gpu/arm && mkdir -p $(KBUILD_OUTPUT)/drivers/net/wireless/ && cp -rf $(CURDIR)/drivers/net/wireless/rockchip_wlan $(KBUILD_OUTPUT)/drivers/net/wireless/ )
+#KBUILD_OUTPUT_XBOARD:=$(shell cp -rf $(CURDIR)/drivers/gpu/arm/mali400 $(KBUILD_OUTPUT)/drivers/gpu/arm && cp -rf $(CURDIR)/drivers/net/wireless/rockchip_wlan $(KBUILD_OUTPUT)/drivers/net/wireless/ )
 PHONY += $(MAKECMDGOALS) sub-make
 
 $(filter-out _all sub-make $(CURDIR)/Makefile, $(MAKECMDGOALS)) _all: sub-make

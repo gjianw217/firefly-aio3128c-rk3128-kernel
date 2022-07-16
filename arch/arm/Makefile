@@ -328,7 +328,23 @@ define archhelp
   echo  '                  (distribution) /sbin/$(INSTALLKERNEL) or'
   echo  '                  install to $$(INSTALL_PATH) and run lilo'
 endef
+ifneq ($(KBUILD_OUTPUT),)
+kernel.img: zImage
+	$(Q)$(srctree)/mkkrnlimg $(KBUILD_OUTPUT)/arch/arm/boot/zImage $(KBUILD_OUTPUT)kernel.img >/dev/null
+	@echo '  skImage:  kernel.img is ready'
 
+%_kernel.img: %.dtb zImage
+	$(Q)cat $(KBUILD_OUTPUT)/arch/arm/boot/zImage $(KBUILD_OUTPUT)/arch/arm/boot/dts/$*.dtb > $(KBUILD_OUTPUT)/zImage-dtb && \
+	$(srctree)/mkkrnlimg $(KBUILD_OUTPUT)/zImage-dtb $(KBUILD_OUTPUT)/kernel.img >/dev/null && \
+	rm -f $(KBUILD_OUTPUT)/zImage-dtb
+	@echo '  Image:  kernel.img (with $*.dtb) is ready'
+
+LOGO := $(notdir $(wildcard $(srctree)/logo.bmp))
+LOGO_KERNEL := $(notdir $(wildcard $(srctree)/logo_kernel.bmp))
+%.img: %.dtb kernel.img $(LOGO) $(LOGO_KERNEL)
+	$(Q)$(srctree)/resource_tool $(KBUILD_OUTPUT)/arch/arm/boot/dts/$*.dtb $(srctree)/$(LOGO) $(srctree)/$(LOGO_KERNEL)
+	@echo '  Image:  resource.img (with $*.dtb $(LOGO) $(LOGO_KERNEL)) is ready'
+else
 kernel.img: zImage
 	$(Q)$(srctree)/mkkrnlimg $(objtree)/arch/arm/boot/zImage $(objtree)/kernel.img >/dev/null
 	@echo '  Image:  kernel.img is ready'
@@ -344,3 +360,4 @@ LOGO_KERNEL := $(notdir $(wildcard $(srctree)/logo_kernel.bmp))
 %.img: %.dtb kernel.img $(LOGO) $(LOGO_KERNEL)
 	$(Q)$(srctree)/resource_tool $(objtree)/arch/arm/boot/dts/$*.dtb $(LOGO) $(LOGO_KERNEL)
 	@echo '  Image:  resource.img (with $*.dtb $(LOGO) $(LOGO_KERNEL)) is ready'
+endif
